@@ -1,5 +1,3 @@
-"""Oracle extractive: chọn n câu tối đa ROUGE-1 F1 so với gold."""
-
 from itertools import combinations
 from math import comb
 

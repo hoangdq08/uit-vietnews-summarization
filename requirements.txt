@@ -3,5 +3,7 @@ numpy>=1.24.0
 rouge-score>=0.1.2
 gradio==4.44.1
 huggingface_hub>=0.25,<1.0
-# Kaggle (notebooks/kaggle_abstractive.ipynb): transformers==4.44.2, sentencepiece, protobuf
+fastapi==0.115.6
+starlette==0.41.3
+pydantic==2.10.6
 

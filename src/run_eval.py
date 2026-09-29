@@ -1,5 +1,3 @@
-"""Chấm ROUGE: Lead / TextRank / ViT5. n=500 thêm Lead-1/5 và Oracle-3."""
-
 from __future__ import annotations
 
 import argparse
@@ -33,7 +31,7 @@ def _preds_for(doc, systems, pred_map):
         elif name == "oracle3":
             out[name] = oracle_n(sents, gold, 3)
         elif name == "vit5":
-            out[name] = pred_map.get(doc["id"], "")
+            out[name] = pred_map[doc["id"]]
     return out
 
 
@@ -41,14 +39,26 @@ def _load_pred_map(n: int) -> dict:
     path = pred_file(n)
     if not path.exists():
         return {}
-    return {r["id"]: r["pred"] for r in json.loads(path.read_text(encoding="utf-8"))}
+    rows = json.loads(path.read_text(encoding="utf-8"))
+    pred_map = {}
+    for row in rows:
+        if row["id"] in pred_map:
+            raise ValueError(f"Prediction trùng ID: {row['id']}")
+        if not isinstance(row["pred"], str) or not row["pred"].strip():
+            raise ValueError(f"Prediction rỗng hoặc không hợp lệ: {row['id']}")
+        pred_map[row["id"]] = row["pred"]
+    return pred_map
 
 
 def run(n: int) -> None:
     docs = load_docs(n, fetch=True)
     pred_map = _load_pred_map(n)
-    if n == 100 and not pred_map:
-        raise SystemExit("thiếu results/preds.json — chạy notebooks/kaggle_abstractive.ipynb")
+    if n in (100, 500) and not pred_map:
+        raise SystemExit(f"Thiếu {pred_file(n)}. Chạy notebooks/kaggle_abstractive.ipynb.")
+    if pred_map:
+        missing = [doc["id"] for doc in docs if doc["id"] not in pred_map]
+        if missing:
+            raise SystemExit(f"Thiếu {len(missing)} prediction, ví dụ {missing[0]}.")
 
     systems = ["lead3", "textrank"]
     if n >= 500:

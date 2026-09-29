@@ -1,5 +1,3 @@
-"""Liệt kê số gold vs ViT5. Chỉ gợi ý — bản đọc tay: results/number_diff_verified.md."""
-
 import json
 import re
 

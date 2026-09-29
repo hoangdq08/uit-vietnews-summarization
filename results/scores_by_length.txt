@@ -12,5 +12,5 @@ dài (≥500)        33  501–1199    0.2298 / 0.1044 / 0.1639  0.2194 / 0.0954
 Quan sát (không suy nguyên nhân chắc):
 - Bài ngắn: ViT5 cao nhất cả 3 độ đo.
 - Bài trung: Lead-3 cao nhất.
-- Bài dài: cả ba giảm; ViT5 vẫn cao hơn extractive.
+- Bài dài: ROUGE-1 của cả ba thấp hơn nhóm trung bình; ViT5 vẫn cao hơn extractive.
 - TextRank không thắng nhóm nào trên R-1.

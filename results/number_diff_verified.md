@@ -10,7 +10,7 @@ Cách lọc: đọc gold + pred + thân bài. Số pred có trong body = lấy t
 
 ## A. Sai / ảo giác số — 7 bài
 
-Dùng khi bảo vệ. Không phóng đại thành “64 bài”.
+Bảy trường hợp dưới đây có số sai hoặc bị gán nhầm sự kiện so với thân bài.
 
 | ID | Gold | ViT5 | Vì sao tính |
 |---|---|---|---|

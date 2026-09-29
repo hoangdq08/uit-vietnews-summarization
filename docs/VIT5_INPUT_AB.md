@@ -1,55 +1,40 @@
-# A/B input ViT5: giữ dấu nối từ hay thay bằng khoảng trắng?
+# Ảnh hưởng của dấu gạch dưới trong đầu vào ViT5
 
 ## Thiết kế và tái lập
 
-Ngày 21/09/2026. Chạy `experiments/vit5_input_ab.py`, smoke-test 1 bài rồi chạy 20 bài, cả hai exit 0. Chọn trước ID 1,26,...,476 từ 500 bài, không chọn theo điểm đầu ra. Đây là phân tích khám phá trên test, không phải tập dev để tối ưu tham số.
+So sánh hai cách biểu diễn cùng thân bài: A giữ dấu `_` của corpus đã tách từ; B chỉ thay `_` bằng khoảng trắng. Cả hai thêm `</s>`, giới hạn input 1.024 token và output `max_length=256`, dùng greedy (`num_beams=1`, `do_sample=False`), CPU float32, seed 0. `early_stopping=True` được giữ để khớp cấu hình baseline, nhưng không có tác dụng với greedy.
 
-A: body nguyên gốc chứa `_`. B: chỉ thay `_` bằng space. Cả hai thêm `</s>`, input tối đa 1024 token, output max_length256, greedy (num_beams1, do_sampleFalse), CPU float32, seed0. Dùng cùng project whitespace ROUGE, không đổi tokenizer chấm điểm.
+Checkpoint revision: `a54febd011c0a39ce49ceacd9225e63ef3a73ad3`. Phiên bản thư viện, cấu hình và ID lưu trong `metadata.json` của từng thư mục kết quả. `predictions.json` lưu output, độ dài token, hash đầu vào và ROUGE từng bài. Scorer giống pipeline chính: thay `_` bằng khoảng trắng ở prediction và gold, rồi dùng whitespace ROUGE F1.
 
-Checkpoint revision: `a54febd011c0a39ce49ceacd9225e63ef3a73ad3`. Chi tiết phiên bản, generation defaults và ID nằm trong `../results/vit5_input_ab_20/metadata.json`. Prediction, token lengths, hashes input và điểm từng bài nằm trong `predictions.json` cùng thư mục.
-
-Lệnh chạy từ thư mục project, chọn output mới vì runner từ chối ghi đè:
+Ba mẫu gồm 20 bài thăm dò (ID 1, 26, …, 476), 100 bài xác nhận (ID 2, 7, …, 497, không trùng mẫu thăm dò) và toàn bộ 500 bài đầu. ID chọn theo quy tắc định trước, không theo điểm output. Mẫu 500 chứa cả hai mẫu nhỏ, không phải tập kiểm chứng độc lập. Đây là phân tích khám phá trên test, không dùng để tối ưu tham số.
 
 ```bash
-python experiments/vit5_input_ab.py --limit 20 --output results/vit5_input_ab_new
+python experiments/vit5_input_ab.py --limit 500 --output results/vit5_input_ab_new
 ```
 
-Chạy trong virtualenv riêng có `torch` và `transformers==4.44.2`, không thay dependency của demo. Runner dùng source preprocess/evaluate hiện tại. Không train, không đổi notebook hay baseline cũ.
+Cần môi trường có `torch`, `transformers==4.44.2`, `sentencepiece` và `protobuf`, ngoài các thư viện đánh giá của project. Runner yêu cầu thư mục output mới để giữ nguyên kết quả đã có.
 
-## Kết quả đo
+## Kết quả
 
-| Chỉ số | A: giữ `_` | B: khoảng trắng |
-|---|---:|---:|
-| ROUGE-1 F1 | 0.1766 | 0.2944 |
-| ROUGE-2 F1 | 0.0830 | 0.1527 |
-| ROUGE-L F1 | 0.1388 | 0.2294 |
-| Token input trung bình trước cắt | 790.4 | 566.9 |
-| Bài vượt 1024 token | 6/20 | 2/20 |
+| Mẫu | Nhánh | ROUGE-1 | ROUGE-2 | ROUGE-L | Token input trung bình trước cắt | Bài bị cắt |
+|---|---|---:|---:|---:|---:|---:|
+| 20 | A giữ `_` | 0.1766 | 0.0830 | 0.1388 | 790.4 | 6 |
+| 20 | B khoảng trắng | 0.2944 | 0.1527 | 0.2294 | 566.9 | 2 |
+| 100 | A giữ `_` | 0.3007 | 0.1708 | 0.2466 | 836.4 | 28 |
+| 100 | B khoảng trắng | 0.3243 | 0.1983 | 0.2719 | 599.3 | 7 |
+| 500 | A giữ `_` | 0.2784 | 0.1474 | 0.2233 | 785.1 | 120 |
+| 500 | B khoảng trắng | 0.3124 | 0.1796 | 0.2560 | 563.3 | 38 |
 
-B tăng ROUGE-1 trên 18 bài, giảm trên 2 bài, không hòa. Prediction A khớp chính xác prediction lịch sử của cả 20 ID trong `preds_500.json`, là kiểm tra tái lập quan trọng. Không so điểm trung bình 20 bài này trực tiếp với điểm 100/500 bài.
+Nguồn: `results/vit5_input_ab_20`, `results/vit5_input_ab_confirm100`, `results/vit5_input_ab_500`. Không so trực tiếp điểm của những mẫu có ID khác nhau. Nhánh A khớp prediction baseline trong `results/preds_500.json` trên các ID tương ứng.
 
-Input representation thay đổi cả token và phần nội dung còn lại sau truncation. Trong 14 bài không bị cắt ở cả hai nhánh, R1 vẫn tăng 0.2037 → 0.3289, R2 0.1062 → 0.1798, RL 0.1640 → 0.2731. Điều này cho thấy kết quả tăng không chỉ xuất hiện ở các bài được giảm truncation, nhưng chưa định lượng riêng đóng góp của từng yếu tố trên toàn mẫu. Hai prediction smoke-test cũng khớp chính xác khi chạy lại trong batch 20 bài. Đây không phải bằng chứng model đã được cải thiện bằng huấn luyện.
+Trong mẫu 20 bài, ROUGE-1 của B tăng trên 18 bài và giảm trên 2 bài. Trong mẫu xác nhận 100 bài, B tăng trên 54 bài, hòa trên 2 và giảm trên 44 bài. Với 72 bài xác nhận không bị cắt ở cả hai nhánh, ROUGE-1 vẫn tăng từ 0.2681 lên 0.2926. Hiệu ứng quan sát được không chỉ xuất hiện ở nhóm giảm truncation, nhưng chưa tách riêng đóng góp của tokenization và nội dung được giữ lại.
 
-## Kiểm tra thủ công: điểm tăng chưa đồng nghĩa đúng sự thật
+## Đối chiếu nội dung
 
-### 000001.txt.seg: ROUGE tăng nhưng B vẫn sai nghiêm trọng
+Ở bài `000001`, ROUGE-1 tăng từ 0.1515 lên 0.5352 khi thay `_`. Nhánh B vẫn sinh tên, ngày và mức án không được thân bài hỗ trợ. Gold có một số chi tiết không xuất hiện đầy đủ trong body, nên phải phân biệt trùng gold với được body hỗ trợ.
 
-Đối chiếu `data/test_tokenized/000001.txt.seg` và hai prediction trong artifact:
+Trong mẫu 100 bài xác nhận, rà soát sơ bộ 20 ID bằng AI phát hiện lỗi ở cả hai nhánh, gồm nhánh B trộn tin ở `000077`, đổi vai người và ngày ở `000377`, đảo người tát ở `000402`. Bảng nhận xét và giới hạn phương pháp nằm trong [VIT5_CONFIRM100.md](VIT5_CONFIRM100.md). Đây chưa phải bộ nhãn do hai người chấm độc lập.
 
-- Gold ghi Hồ Xuân Huy, ngày 25/2, 12 năm tù.
-- A sinh Bùi Quang Huy và gán là Vũ “nhôm”, không được body hỗ trợ.
-- B sinh Phan Phú Huy, ngày 4/4, 40 tuổi, chung thân. Các chi tiết này không được body hỗ trợ và mâu thuẫn gold.
-- R1 tăng từ 0.1515 lên 0.5352, nhưng không được gọi đó là bản tóm tắt chính xác hơn.
-- Body bắt đầu bằng lời khai của “Huy”, không chứa đầy đủ các chi tiết ở gold. Phải phân biệt hallucination trong output với thông tin reference vốn không hiện diện trong input body.
+## Kết luận
 
-### 000326.txt.seg: B giảm ROUGE
-
-R1 B giảm khoảng 0.0820. B dùng tên “Mai” và kể chi tiết xe máy/đi trộm, trong khi gold tóm tắt khái quát việc bắt một thanh niên trộm tài sản. Không thể chỉ từ ROUGE thấp hơn kết luận B sai hơn. Cách nối thời gian “Khi bị ... phát hiện ...” cũng cần xem xét, không tự chứng nhận factuality từ trùng từ.
-
-## Kết luận và bước tiếp theo
-
-Có bằng chứng trên mẫu này rằng thay `_` bằng space tăng overlap với gold và giảm lượng input bị cắt. Chưa đủ bằng chứng để đưa ra kết luận về factuality hoặc toàn bộ Vietnews. Chưa đổi pipeline chính.
-
-Đề xuất tiếp: chấm factuality theo rubric trên các bài cố định, kiểm tra gold có được body hỗ trợ và xác nhận kết quả trên tập đánh giá độc lập trước khi chốt preprocessing. Không chọn tham số để tối đa điểm của 20 bài này.
-
-Cảnh báo runtime còn thấy: LibreSSL/urllib3, tokenizer T5 legacy, early_stopping không có tác dụng với num_beams1. Giữ early_stopping để khớp notebook, không tắt cảnh báo.
+Thay `_` bằng khoảng trắng tăng ROUGE trung bình và giảm số bài bị cắt input trên các mẫu đã đo. Chưa kiểm định thống kê, chưa đánh giá factuality độc lập trên toàn mẫu, và chưa đủ căn cứ kết luận bản tóm tắt đúng sự thật hơn. Pipeline chính giữ đầu vào có dấu gạch dưới; demo hiển thị cả hai nhánh để đối chiếu.

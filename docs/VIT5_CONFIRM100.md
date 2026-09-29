@@ -2,7 +2,7 @@
 
 ## Thiết kế và kết quả
 
-Ngày 21/09/2026. Runner `experiments/vit5_input_ab.py --limit 100 --output results/vit5_input_ab_confirm100` chạy thành công exit 0, 200 lượt inference CPU. ID 2,7,...,497 không trùng 20 ID thăm dò. Chốt trước 20 ID review 2,27,...,477 trong metadata. Cùng checkpoint revision và cấu hình với vòng20, khác duy nhất input `_` so với space. Đây vẫn là mẫu theo quy tắc trong test Vietnews, không đại diện ngẫu nhiên toàn corpus, không dùng để tuning.
+Ngày 21/09/2026. Thí nghiệm gồm 200 lượt inference CPU bằng `experiments/vit5_input_ab.py` trên 100 bài. ID 2,7,...,497 không trùng 20 ID thăm dò. Chốt trước 20 ID review 2,27,...,477 trong metadata. Cùng checkpoint revision và cấu hình với mẫu 20 bài, khác duy nhất input `_` so với space. Đây vẫn là mẫu theo quy tắc trong test Vietnews, không đại diện ngẫu nhiên toàn corpus, không dùng để tuning.
 
 | Metric | A giữ `_` | B space |
 |---|---:|---:|
@@ -12,11 +12,11 @@ Ngày 21/09/2026. Runner `experiments/vit5_input_ab.py --limit 100 --output resu
 | Input token trung bình | 836.40 | 599.26 |
 | Bài bị cắt input | 28 | 7 |
 
-R1 B thắng54, hòa2, thua44. Mức tăng nhỏ hơn vòng20, không suy rộng mức tăng vòng20. Đã kiểm tra đủ200 output, ID không trùng vòng20, hashes input, gold exact, prediction không rỗng và tính lại cả3 metric/mean bằng scorer project, PASS exit0.
+R1 B tăng trên 54 bài, hòa trên 2 bài, giảm trên 44 bài. Mức tăng nhỏ hơn mẫu 20 bài, không suy rộng mức tăng mẫu 20 bài. Đã kiểm tra đủ 200 output, ID không trùng mẫu 20 bài, hashes input, gold exact, prediction không rỗng và tính lại ba độ đo và điểm trung bình bằng scorer project.
 
 Artifact: `results/vit5_input_ab_confirm100/{metadata,predictions,summary}.json`. Không ghi đè baseline.
 
-Phản kiểm tra bổ sung, exit0: prediction A khớp chính xác lịch sử `preds_500.json` 100/100 bài. Trong72 bài không bị cắt ở cả hai nhánh, R1 0.2681 → 0.2926, R2 0.1335 → 0.1606, RL 0.2191 → 0.2367. Vì vậy mức tăng overlap không chỉ xuất hiện ở nhóm giảm truncation. Không suy từ kết quả này rằng factuality tốt hơn.
+Kiểm tra tái lập: prediction A khớp chính xác lịch sử `preds_500.json` 100/100 bài. Trong 72 bài không bị cắt ở cả hai nhánh, R1 0.2681 → 0.2926, R2 0.1335 → 0.1606, RL 0.2191 → 0.2367. Vì vậy mức tăng overlap không chỉ xuất hiện ở nhóm giảm truncation. Không suy từ kết quả này rằng factuality tốt hơn.
 
 ## Review factuality: 20 bài chốt trước
 
@@ -45,12 +45,10 @@ Phản kiểm tra bổ sung, exit0: prediction A khớp chính xác lịch sử 
 | 000452 | U | S | A nói chết tại chỗ, body có mở đầu phát hiện tử vong nhưng đoạn sau nói chết sau cấp cứu. Nguồn tự thiếu nhất quán, không dùng case này chứng nhận A đúng. B không thêm “tại chỗ”. |
 | 000477 | S | S | Cả hai bám câu cuối body về bị đe dọa nên không báo gia đình, nhưng bỏ nội dung xâm hại và4.000 đồng trong gold. |
 
-Không công bố tỷ lệ factuality như ground truth: rubric đã dùng sau khi generation bắt đầu, chấm một người, vài case U cần đối chiếu người thật. Danh sách20 ID được chốt trước output, nhưng review không blind. Các lỗi nghiêm trọng B ở000077,000377,000402 đủ để bác bỏ kết luận “B luôn tốt hơn”.
+Không công bố tỷ lệ factuality như ground truth: rubric đã dùng sau khi generation bắt đầu, chấm một lượt bằng AI, vài case U cần đối chiếu người thật. Danh sách 20 ID được chốt trước output, nhưng review không blind. Các lỗi nghiêm trọng B ở 000077,000377,000402 đủ để bác bỏ kết luận “B luôn tốt hơn”.
 
-## Quyết định
+## Kết luận và hạn chế
 
-**Giữ pipeline chính và prediction baseline. Không tự chuyển mặc định sang B ở vòng này.** B cải thiện ROUGE trung bình và giảm truncation, nhưng chưa có bằng chứng đủ tin cậy rằng không làm xấu factuality. Không chạy500 rồi cập nhật demo dưới nhãn “cải thiện” khi điều kiện factuality chưa đạt.
+Nhánh B tăng ROUGE trung bình và giảm số bài bị cắt đầu vào. Một số output vẫn sai hoặc gán nhầm sự kiện, nên kết quả không chứng minh factuality tốt hơn. Pipeline chính giữ input có dấu gạch dưới; demo hiển thị cả hai nhánh để đối chiếu.
 
-Có thể đưa cả A/B vào báo cáo như một kết quả thực nghiệm có trade-off, với ví dụ điểm số và lỗi. Bước kế tiếp là thành viên nhóm kiểm tra lại bảng này theo rubric, nhất là U, trước khi quyết định tích hợp. Không train để chữa lỗi khi chưa xác định nguyên nhân và dữ liệu phù hợp.
-
-Chưa kiểm định thống kê, chưa đánh giá toàn bộ 100 bài thủ công. Cảnh báo LibreSSL/T5 legacy/EOS/early_stopping vẫn còn, được giữ nguyên để quan sát.
+Chưa kiểm định thống kê và chưa có đánh giá độc lập bởi hai người trên toàn bộ mẫu. Danh sách lỗi sơ bộ cần được người chấm xác nhận trước khi dùng như nhãn chuẩn.

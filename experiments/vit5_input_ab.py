@@ -1,10 +1,3 @@
-"""Controlled ViT5 input A/B.
-
---limit 1 or 20: evenly spaced exploratory IDs.
---limit 100: confirmation IDs 000002, 000007, ..., 000497.
---limit 500: every article 000001–000500, in filename order.
-Writes only to a new output directory. Does not overwrite baseline predictions.
-"""
 import argparse
 import hashlib
 import json
@@ -32,8 +25,8 @@ def main():
 
     torch.manual_seed(0)
     torch.set_num_threads(4)
-    # simplify: CPU float32 is slower but avoids an unverified MPS numerical path.
-    # Upgrade to MPS only after separate CPU/MPS equivalence checks.
+
+
     device = "cpu"
     model_id = "VietAI/vit5-base-vietnews-summarization"
     revision = "a54febd011c0a39ce49ceacd9225e63ef3a73ad3"
@@ -43,12 +36,12 @@ def main():
         selection = "IDs 000001-000500 in filename order"
     elif args.limit == 100:
         selected = [docs[i] for i in range(1, 500, 5)]
-        selection = "IDs 2,7,...,497 disjoint confirmation"
+        selection = "IDs 2,7,...,497 disjoint from exploratory IDs"
     else:
         selected = [docs[i] for i in range(0, 500, 25)][:args.limit]
         selection = "IDs 1,26,...,476 exploratory"
     args.output.mkdir(parents=True)
-    print("JCODE_PROGRESS " + json.dumps({"message": "Loading pinned checkpoint " + revision}), flush=True)
+    print("" + json.dumps({"message": "Loading pinned checkpoint " + revision}), flush=True)
     tok = T5Tokenizer.from_pretrained(model_id, revision=revision)
     model = T5ForConditionalGeneration.from_pretrained(model_id, revision=revision).to(device)
     model.eval()
@@ -88,9 +81,9 @@ def main():
                 "seconds": elapsed, **rouge_one(normalize(pred), normalize(doc["abstract"])),
             }
             rows.append(row)
-            # Save each completed inference so a timeout does not erase partial results.
+
             (args.output / "predictions.json").write_text(json.dumps(rows, ensure_ascii=False, indent=2))
-            print("JCODE_PROGRESS " + json.dumps({"current": len(rows), "total": 2 * len(selected), "message": doc["id"] + " " + variant, "seconds": round(elapsed, 2)}), flush=True)
+            print("" + json.dumps({"current": len(rows), "total": 2 * len(selected), "message": doc["id"] + " " + variant, "seconds": round(elapsed, 2)}), flush=True)
     summary = {}
     for variant in ("original", "spaces"):
         subset = [r for r in rows if r["variant"] == variant]

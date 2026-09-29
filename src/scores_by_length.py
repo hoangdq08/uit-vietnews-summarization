@@ -1,5 +1,3 @@
-"""ROUGE theo độ dài thân bài (n=100, ngưỡng 300/500)."""
-
 from __future__ import annotations
 
 import csv
@@ -58,7 +56,7 @@ def main() -> None:
         ws = [w for w, _ in items]
         recs = [r for _, r in items]
         stats = {k: mean([float(r[k]) for r in recs]) for k in KEYS}
-        lo, hi = min(ws), max(ws)
+        lo, hi = (min(ws), max(ws)) if ws else (0, 0)
         lines.append(
             f"{LABELS[key]:16} {len(items):3}  {lo}–{hi:<6}  "
             f"{stats['lead3_r1']:.4f} / {stats['lead3_r2']:.4f} / {stats['lead3_rL']:.4f}  "
@@ -73,7 +71,7 @@ def main() -> None:
         "Quan sát (không suy nguyên nhân chắc):",
         "- Bài ngắn: ViT5 cao nhất cả 3 độ đo.",
         "- Bài trung: Lead-3 cao nhất.",
-        "- Bài dài: cả ba giảm; ViT5 vẫn cao hơn extractive.",
+        "- Bài dài: ROUGE-1 của cả ba thấp hơn nhóm trung bình; ViT5 vẫn cao hơn extractive.",
         "- TextRank không thắng nhóm nào trên R-1.",
         "",
     ]

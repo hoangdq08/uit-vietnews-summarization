@@ -1,5 +1,3 @@
-"""Đọc file Vietnews đã tách từ. Không gọi tokenizer khác trên gold data."""
-
 from pathlib import Path
 
 from fetch_vietnews import fetch_vietnews
@@ -20,7 +18,6 @@ def parse_file(path):
 
 
 def split_sentences(body):
-    """Thân bài Vietnews: mỗi câu thường một dòng."""
     sents = []
     buf = []
     for line in body.splitlines():

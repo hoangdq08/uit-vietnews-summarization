@@ -1,5 +1,3 @@
-"""Lead-3 và TextRank (TF-IDF + cosine + PageRank)."""
-
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -17,12 +15,19 @@ def textrank(sentences, n=3, damping=0.85, iters=40):
         return " ".join(sentences)
 
     vec = TfidfVectorizer()
-    x = vec.fit_transform(sentences)
+    try:
+        x = vec.fit_transform(sentences)
+    except ValueError as error:
+        if "empty vocabulary" not in str(error):
+            raise
+        return lead_n(sentences, n)
     sim = (x * x.T).toarray()
     np.fill_diagonal(sim, 0.0)
     row_sum = sim.sum(axis=1, keepdims=True)
-    row_sum[row_sum == 0] = 1.0
+    dangling = row_sum[:, 0] == 0
+    row_sum[dangling] = 1.0
     trans = sim / row_sum
+    trans[dangling] = 1.0 / len(sentences)
 
     scores = np.ones(len(sentences)) / len(sentences)
     teleport = (1.0 - damping) / len(sentences)

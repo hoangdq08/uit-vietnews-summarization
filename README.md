@@ -1,93 +1,38 @@
 # Vietnews summarization
 
-**Extractive vs abstractive summarization on Vietnamese news**, evaluated with ROUGE *and* a manual factuality review. Course project for **CS221.F31.LT.TTNT, Xử lý ngôn ngữ tự nhiên** (NLP), instructor: TS. Đặng Văn Thìn, UIT (VNU-HCM), team of 3.
+So sánh tóm tắt rút trích (Lead-n, TextRank) và tóm lược bằng checkpoint ViT5 trên tin tức tiếng Việt. Đồ án môn **CS221.F31.LT.TTNT – Xử lý ngôn ngữ tự nhiên**, UIT, giảng viên **TS. Đặng Văn Thìn**. Nhóm 14: Nguyễn Trí Toàn, Nguyễn Văn Thái, Đỗ Quốc Hoàng.
 
-![Gradio demo: gold summary vs Lead-3, TextRank and ViT5 side by side](docs/img/demo.png)
+![Demo so sánh Lead-3, TextRank và ViT5](docs/img/demo.jpg)
 
-**Key findings** (Vietnews `test_tokenized`, first 500 articles, ROUGE F1):
+Dữ liệu: [Vietnews](https://github.com/ThanhChinhBK/vietnews), split `test_tokenized`. Checkpoint: [VietAI/vit5-base-vietnews-summarization](https://huggingface.co/VietAI/vit5-base-vietnews-summarization), đã được tác giả fine-tune trên Vietnews. Project dùng trọng số có sẵn, không huấn luyện thêm.
 
-| System | ROUGE-1 | ROUGE-2 | ROUGE-L |
-|---|---|---|---|
-| Lead-1 | 0.2719 | 0.1305 | 0.2092 |
-| TextRank-3 | 0.2499 | 0.1198 | 0.1815 |
-| ViT5 (off-the-shelf) | **0.2784** | **0.1474** | **0.2233** |
-| Oracle-3 (upper bound) | 0.4646 | 0.2793 | 0.3410 |
-
-- ViT5 edges out a strong Lead-1 baseline, and Oracle-3 shows extractive methods still have large headroom.
-- **ROUGE is not factuality.** A manual read of 100 ViT5 outputs found 24 articles with wrong or misattributed facts (names, numbers, outcomes). See [`results/error_analysis.md`](results/error_analysis.md).
-- **Input preprocessing matters.** Replacing word-segmentation underscores with spaces raises ViT5 ROUGE-1 from 0.2784 to 0.3124 on 500 articles and cuts truncated inputs from 120 to 38. It is exploratory only and not adopted in the main pipeline. See [`docs/VIT5_INPUT_AB.md`](docs/VIT5_INPUT_AB.md).
-
-**Run the demo:** `docker build -t vietnews-demo . && docker run --rm -p 7860:7860 vietnews-demo`, then open http://127.0.0.1:7860 (no GPU needed).
-
-*The rest of this README is in Vietnamese.*
-
----
-
-So sánh tóm tắt **rút trích** (Lead-n, TextRank) và **tóm lược** (ViT5) trên tin tức tiếng Việt.
-
-Input: thân bài đã tách từ. Output: bản tóm tắt ngắn + ROUGE so với sapo (gold). Demo Gradio ba cột, chạy local hoặc Docker — không cần GPU lúc xem.
-
-Dữ liệu: [Vietnews](https://github.com/ThanhChinhBK/vietnews) `test_tokenized`. Checkpoint: [`VietAI/vit5-base-vietnews-summarization`](https://huggingface.co/VietAI/vit5-base-vietnews-summarization) (off-the-shelf, không fine-tune).
-
-## Quick start
-
-Demo chạy trong Docker, không cần cài Python trên máy.
+## Chạy demo
 
 ```bash
 docker build -t vietnews-demo .
 docker run --rm -p 7860:7860 vietnews-demo
 ```
 
-Mở http://127.0.0.1:7860
+Mở [http://127.0.0.1:7860](http://127.0.0.1:7860). Khi build, image tải 500 bài test từ GitHub. Demo chạy Lead-3 và TextRank trên CPU, đọc output ViT5 đã lưu, không tải model hoặc gọi inference trực tiếp.
 
-Lúc build, image tự tải 500 file test. Cần Internet một lần. Lúc mở demo, container đọc file đã nằm trong image, không gọi mạng.
+Chạy bằng Python 3.11:
 
-Nếu sửa code trên máy, dùng `.venv` rồi `python app/demo.py`. Cách đó không dùng khi bảo vệ.
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python src/fetch_vietnews.py --n 500
+python app/demo.py
+```
 
-## Pipeline
+## Phương pháp và đánh giá
 
-| Bước | Chỗ chạy | Lệnh |
-|---|---|---|
-| Lấy test set | local / Kaggle | `python src/fetch_vietnews.py --n 500` |
-| Extractive | local CPU | Lead-n, TextRank trong `src/extractive.py` |
-| Abstractive | Kaggle GPU | `notebooks/kaggle_abstractive.ipynb` → `results/preds_500.json` |
-| ROUGE | local | `python src/run_eval.py --limit 100` hoặc `--limit 500` |
-| Demo | Docker | `docker run --rm -p 7860:7860 vietnews-demo` |
+- **Lead-n:** lấy n câu đầu thân bài.
+- **TextRank-3:** biểu diễn câu bằng TF-IDF, tính cosine, chạy PageRank 40 vòng với damping 0.85, lấy ba câu điểm cao và giữ thứ tự gốc.
+- **ViT5:** chỉ nhận thân bài, thêm `</s>`, giới hạn input 1.024 token và output `max_length=256`. Notebook inference: [kaggle_abstractive.ipynb](notebooks/kaggle_abstractive.ipynb).
+- **Oracle-3:** dùng gold để tìm tổ hợp ba câu có ROUGE-1 cao nhất, chuyển sang greedy khi số tổ hợp vượt 30.000. Đây là mốc tham chiếu sử dụng đáp án, không phải hệ dùng thực tế hoặc trần cho mọi độ dài tóm tắt.
 
-ViT5 cần GPU. Notebook Kaggle: **T4 x2**, **Internet On**, không Add Dataset. Cell 1 cài `transformers==4.44.2` → **Restart session** → chạy tiếp (`N = 500`). Generate: `</s>`, `max_length=256`, `early_stopping=True`, `cuda:0`. Tải `/kaggle/working/preds_500.json` về `results/`. Session bị kill thì chạy lại cell infer (resume).
-
-## Results
-
-ROUGE F1, tokenizer: thay `_` → space rồi split (gold/extractive giữ `_`, ViT5 thì không).
-
-**n = 100** (`000001`–`000100`)
-
-| Hệ | ROUGE-1 | ROUGE-2 | ROUGE-L |
-|---|---|---|---|
-| Lead-3 | 0.2507 | 0.1296 | 0.1841 |
-| TextRank | 0.2428 | 0.1100 | 0.1730 |
-| ViT5 | 0.2664 | 0.1341 | 0.2084 |
-
-**n = 500** (`000001`–`000500`). 100 pred đầu trùng n=100.
-
-| Hệ | ROUGE-1 | ROUGE-2 | ROUGE-L |
-|---|---|---|---|
-| Lead-1 | 0.2719 | 0.1305 | 0.2092 |
-| Lead-3 | 0.2569 | 0.1294 | 0.1856 |
-| Lead-5 | 0.2256 | 0.1199 | 0.1624 |
-| TextRank-3 | 0.2499 | 0.1198 | 0.1815 |
-| ViT5 | 0.2784 | 0.1474 | 0.2233 |
-| Oracle-3 | 0.4646 | 0.2793 | 0.3410 |
-
-Lead-1 > Lead-3: gold gần câu mở đầu. ViT5 hơn Lead-1 một chút. Oracle-3 ≈ 0.46: extractive còn cửa.
-
-ROUGE-1 theo độ dài thân bài (n=100, ngưỡng 300/500 từ):
-
-| Nhóm | n | Lead-3 | TextRank | ViT5 |
-|---|---|---|---|---|
-| Ngắn (<300) | 34 | 0.2581 | 0.2672 | 0.2919 |
-| Trung (300–499) | 33 | 0.2638 | 0.2409 | 0.2549 |
-| Dài (≥500) | 33 | 0.2298 | 0.2194 | 0.2519 |
+Gold là trường abstract (sapo). Trước khi chấm ROUGE F1, cả prediction và gold được thay `_` bằng khoảng trắng rồi tách theo khoảng trắng, không stemming hoặc chuyển chữ thường. ROUGE-1/2 đo trùng token/ngram, ROUGE-L dùng dãy con chung dài nhất.
 
 ```bash
 python src/run_eval.py --limit 100
@@ -95,25 +40,51 @@ python src/run_eval.py --limit 500
 python src/scores_by_length.py
 ```
 
-ROUGE không thay cho đọc tay. Trên 100 bài, ViT5 có **7** trường hợp sai/ảo giác số và **13** bài sót án/tiền/số nạn nhân — không dùng 64/100 của regex. Chi tiết: `results/error_analysis.md`, `results/number_diff_verified.md`.
+Notebook chạy trên Kaggle với GPU và Internet. Sau cell cài `transformers==4.44.2`, khởi động lại session rồi chạy các cell tiếp theo. Tải file `preds_500.json` về `results/` trước khi đánh giá 500 bài.
 
-## Layout
+## Kết quả
 
-```
-src/           fetch, preprocess, extractive, oracle, ROUGE, eval
-app/demo.py    Gradio, 500 bài, ViT5 từ preds_500.json
+ROUGE F1 trung bình trên **500 bài đầu** theo tên file, `000001`–`000500`.
+
+| Hệ | ROUGE-1 | ROUGE-2 | ROUGE-L |
+|---|---:|---:|---:|
+| Lead-1 | 0.2719 | 0.1305 | 0.2092 |
+| Lead-3 | 0.2569 | 0.1294 | 0.1856 |
+| Lead-5 | 0.2256 | 0.1199 | 0.1624 |
+| TextRank-3 | 0.2499 | 0.1198 | 0.1815 |
+| ViT5 | 0.2784 | 0.1474 | 0.2233 |
+| Oracle-3 | 0.4646 | 0.2793 | 0.3410 |
+
+Trên **100 bài đầu**, Lead-3 đạt 0.2507 / 0.1296 / 0.1841, TextRank đạt 0.2428 / 0.1100 / 0.1730, ViT5 đạt 0.2664 / 0.1341 / 0.2084. Đây là tập con của mẫu 500 bài.
+
+Rà soát định tính một lượt trên 100 bài ghi nhận **24 bài ViT5 sai hoặc gán nhầm sự kiện**. Đối chiếu số ghi nhận **7 bài sai/gán nhầm số** và **13 bài sót số then chốt trong gold**. Các nhóm lỗi có thể giao nhau. Chưa có hai người chấm độc lập, và không thể suy tỷ lệ lỗi cho toàn bộ Vietnews. Xem [phân tích lỗi](results/error_analysis.md) và [đối chiếu số](results/number_diff_verified.md).
+
+Thí nghiệm thay `_` bằng khoảng trắng trước khi đưa vào ViT5 tăng ROUGE-1 từ **0.2784 lên 0.3124** trên cùng 500 bài, giảm số bài bị cắt input từ **120 xuống 38**. Đây là phân tích khám phá trên test; chưa chứng minh factuality tốt hơn và chưa áp dụng vào pipeline chính. Xem [thiết kế và kết quả A/B](docs/VIT5_INPUT_AB.md).
+
+Mẫu lấy theo thứ tự tên file, không ngẫu nhiên. Chưa kiểm định ý nghĩa thống kê. Kết quả dùng tokenizer riêng của project nên không so trực tiếp với bảng điểm trong bài báo ViT5.
+
+## Cấu trúc
+
+```text
+src/           tải dữ liệu, tiền xử lý, rút trích, Oracle và ROUGE
+app/           demo Gradio
 notebooks/     inference ViT5 trên Kaggle
-data/          SOURCE.txt; test_tokenized/ do fetch (gitignored)
-results/       preds, scores, error analysis
-Dockerfile     demo cổng 7860
+experiments/   thí nghiệm A/B đầu vào ViT5
+results/       prediction, điểm số và phân tích lỗi
+data/          nguồn dữ liệu; corpus tải về không đưa vào Git
+docs/          mô tả thí nghiệm và ảnh demo
+report/        báo cáo Word và PDF
+slides/        slide PowerPoint
 ```
 
-`src/paths.py` là nguồn đường dẫn và id (`000001.txt.seg` …).
+## Báo cáo và slide
 
-## Notes
+- [Báo cáo Word](report/CS221-Vietnews-bao-cao.docx)
+- [Báo cáo PDF](report/CS221-Vietnews-bao-cao.pdf)
+- [Slide PowerPoint](slides/CS221-Vietnews-bao-ve.pptx)
 
-- Không train lại ViT5 trên Vietnews (checkpoint đã học miền này).
-- Không crawl bài mới; không tách từ lại trên gold.
-- Demo không gọi Hugging Face lúc runtime.
+## Tài liệu tham khảo
 
-Nguyễn Trí Toàn, Nguyễn Văn Thái, Đỗ Quốc Hoàng.
+- Phan et al. (2022). [ViT5: Pretrained Text-to-Text Transformer for Vietnamese Language Generation](https://aclanthology.org/2022.naacl-srw.18/).
+- Mihalcea và Tarau (2004). [TextRank: Bringing Order into Text](https://aclanthology.org/W04-3252/).
+- Lin (2004). [ROUGE: A Package for Automatic Evaluation of Summaries](https://aclanthology.org/W04-1013/).

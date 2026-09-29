@@ -200,6 +200,6 @@ Phần dưới là 20 bài đã viết chi tiết trước khi đọc đủ 100.
 
 ## Ghi chú sau khi đọc đủ 100
 
-Bảng 24 bài ở đầu file là kết quả dùng khi bảo vệ. Bảng ước của 20 bài viết chi tiết không còn dùng làm số công bố, vì 000031 đã được sửa và mẫu 20 không phải cả tập.
+Bảng 24 bài ở đầu file tổng hợp toàn bộ mẫu 100 bài. Các ví dụ chi tiết chỉ minh họa, không dùng để ước lượng tỷ lệ lỗi trên toàn corpus.
 
 Đối chiếu số trên đủ 100 bài vẫn ở `results/number_diff_verified.md`: 7 bài sai hoặc gán nhầm số, 13 bài sót số then chốt của sapo. Không cộng hai cột đó thành một tỷ lệ.

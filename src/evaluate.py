@@ -1,5 +1,3 @@
-"""ROUGE F1. Gọi normalize() trước khi so extractive với ViT5."""
-
 from rouge_score.rouge_scorer import RougeScorer
 from rouge_score.tokenizers import Tokenizer
 
@@ -10,7 +8,6 @@ class WhitespaceTokenizer(Tokenizer):
 
 
 def normalize(text):
-    """Gold/extractive dùng dấu '_'; ViT5 thì không. Gỡ '_' trước ROUGE."""
     return (text or "").replace("_", " ")
 
 

@@ -1,5 +1,3 @@
-"""Kéo 000001.txt.seg … 000{N}.txt.seg từ GitHub. Không clone train."""
-
 from __future__ import annotations
 
 import argparse

@@ -6,7 +6,6 @@ venv/
 *.egg-info/
 .ipynb_checkpoints/
 slides/node_modules/
-# corpus: kéo bằng src/fetch_vietnews.py, không commit .seg
 data/**/*.txt.seg
 data/test_tokenized/
 /tmp/

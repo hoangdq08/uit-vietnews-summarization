@@ -1,5 +1,3 @@
-"""Demo 3 cột: Lead-3 | TextRank | ViT5 trên 500 bài test đầu."""
-
 import csv
 import json
 import sys
@@ -13,12 +11,23 @@ from preprocess import load_docs
 
 
 def read_pairs(path):
-    """Return complete original/spaces pairs, or None while a run is still writing."""
     if not path.exists():
         return None
-    rows = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        rows = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(rows, list):
+        return None
     pairs = {}
     for row in rows:
+        required = {"id", "variant", "pred", "title", "abstract", "rouge1", "rouge2", "rougeL", "full_input_tokens", "used_input_tokens", "truncated"}
+        if not isinstance(row, dict) or not required <= row.keys():
+            return None
+        if not isinstance(row["id"], str) or not isinstance(row["pred"], str) or not row["pred"].strip():
+            return None
+        if row["variant"] not in ("original", "spaces"):
+            return None
         variants = pairs.setdefault(row["id"], {})
         if row["variant"] in variants:
             return None
@@ -29,14 +38,13 @@ def read_pairs(path):
 
 
 def load_ab():
-    """Optional offline artifact. Missing data must not break the baseline demo."""
     full = read_pairs(RESULTS / "vit5_input_ab_500" / "predictions.json")
     if full and len(full) == 500:
-        return full, "A/B đủ 500 bài 000001–000500, sinh sẵn, không inference lúc mở demo. ROUGE cao không đảm bảo đúng sự thật."
+        return full, "So sánh hai cách chuẩn bị đầu vào trên 500 bài. ROUGE cao không đảm bảo bản tóm tắt đúng sự thật."
     pairs = read_pairs(RESULTS / "vit5_input_ab_confirm100" / "predictions.json")
     if not pairs:
-        return {}, "Chưa có artifact A/B. Baseline vẫn hoạt động."
-    return pairs, "A/B sinh sẵn trên 100 bài cách quãng, không inference trực tiếp. ROUGE cao không đảm bảo đúng sự thật."
+        return {}, "Chưa có kết quả so sánh hai cách chuẩn bị đầu vào."
+    return pairs, "So sánh hai cách chuẩn bị đầu vào trên 100 bài cách quãng. ROUGE cao không đảm bảo bản tóm tắt đúng sự thật."
 
 
 def main():
@@ -90,7 +98,7 @@ def main():
     with gr.Blocks(title="Tóm tắt tin tức tiếng Việt") as demo:
         gr.Markdown(
             "## Vietnews summarization\n"
-            "500 bài test đầu. Lead-3 và TextRank chạy trong container. ViT5 lấy từ `results/preds_500.json`."
+            "So sánh Lead-3, TextRank và ViT5 trên 500 bài kiểm thử. Điểm ROUGE đo mức trùng khớp với tóm tắt mẫu."
         )
         picker = gr.Dropdown(choices, value=choices[0], label="Bài test")
         title = gr.Textbox(label="Tiêu đề", lines=1)

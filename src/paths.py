@@ -1,5 +1,3 @@
-"""Đường dẫn repo. Một chỗ, các script khác import từ đây."""
-
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
