@@ -34,5 +34,5 @@ def textrank(sentences, n=3, damping=0.85, iters=40):
     for _ in range(iters):
         scores = damping * trans.T.dot(scores) + teleport
 
-    top = sorted(scores.argsort()[::-1][:n])
+    top = sorted(np.argsort(-np.round(scores, 14), kind="stable")[:n])
     return " ".join(sentences[i] for i in top)

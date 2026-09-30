@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from extractive import lead_n, textrank
-from paths import RESULTS
+from paths import RESULTS, file_ids
 from preprocess import load_docs
 
 
@@ -20,11 +20,24 @@ def read_pairs(path):
     if not isinstance(rows, list):
         return None
     pairs = {}
+    valid_ids = set(file_ids(500))
     for row in rows:
         required = {"id", "variant", "pred", "title", "abstract", "rouge1", "rouge2", "rougeL", "full_input_tokens", "used_input_tokens", "truncated"}
         if not isinstance(row, dict) or not required <= row.keys():
             return None
         if not isinstance(row["id"], str) or not isinstance(row["pred"], str) or not row["pred"].strip():
+            return None
+        if row["id"] not in valid_ids or not isinstance(row["title"], str) or not isinstance(row["abstract"], str):
+            return None
+        for key in ("rouge1", "rouge2", "rougeL"):
+            value = row[key]
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= value <= 1:
+                return None
+        for key in ("full_input_tokens", "used_input_tokens"):
+            value = row[key]
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                return None
+        if row["used_input_tokens"] > row["full_input_tokens"] or not isinstance(row["truncated"], bool):
             return None
         if row["variant"] not in ("original", "spaces"):
             return None
@@ -39,10 +52,11 @@ def read_pairs(path):
 
 def load_ab():
     full = read_pairs(RESULTS / "vit5_input_ab_500" / "predictions.json")
-    if full and len(full) == 500:
+    if full and set(full) == set(file_ids(500)):
         return full, "So sánh hai cách chuẩn bị đầu vào trên 500 bài. ROUGE cao không đảm bảo bản tóm tắt đúng sự thật."
     pairs = read_pairs(RESULTS / "vit5_input_ab_confirm100" / "predictions.json")
-    if not pairs:
+    expected = {f"{i:06d}.txt.seg" for i in range(2, 500, 5)}
+    if not pairs or set(pairs) != expected:
         return {}, "Chưa có kết quả so sánh hai cách chuẩn bị đầu vào."
     return pairs, "So sánh hai cách chuẩn bị đầu vào trên 100 bài cách quãng. ROUGE cao không đảm bảo bản tóm tắt đúng sự thật."
 
@@ -66,6 +80,8 @@ def main():
     ab_pairs, ab_notice = load_ab()
 
     def run_ab(doc_id):
+        if doc_id not in ab_pairs:
+            return "", "", "", "", ""
         from preprocess import parse_file
         from paths import DATA_DIR
         pair = ab_pairs[doc_id]
@@ -78,6 +94,8 @@ def main():
         return a["title"], body.replace("_", " "), a["abstract"].replace("_", " "), tagged(a), tagged(b)
 
     def run(choice):
+        if choice not in choice_to_id:
+            return "", "", "", "", ""
         doc_id = choice_to_id[choice]
         doc = by_id[doc_id]
         sc = scores.get(doc_id, {})

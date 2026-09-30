@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+from statistics import median
 
 from paths import RESULTS
 
@@ -46,7 +47,7 @@ def main() -> None:
         "Ngưỡng 300 / 500: làm tròn tertile trên 100 bài (p33≈298, p67≈492) để mỗi nhóm ~1/3.",
         "Cùng tokenizer với bảng chính: '_' → space.",
         "",
-        f"n={len(rows)}; min={min(lens)}; median={sorted(lens)[len(lens)//2]}; max={max(lens)}.",
+        f"n={len(rows)}; min={min(lens)}; median={median(lens):g}; max={max(lens)}.",
         "",
         f"{'nhóm':16} {'n':3}  độ dài     Lead-3 R1/R2/RL           TextRank                 ViT5",
     ]
