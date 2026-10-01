@@ -1,16 +1,16 @@
-# Phân tích lỗi (đọc tay, n=100)
+# Phân tích lỗi định tính (n=100)
 
 Nguồn: `data/test_tokenized` bài 000001–000100, `results/preds.json`, Lead-3 và TextRank tính lại từ thân bài.
 
 Cách đọc: xem gold, ViT5, Lead-3 và TextRank của đủ 100 bài. Khi ViT5 có tên, số, địa điểm hoặc kết cục lạ thì mở thân bài. Một lượt đọc, không phải hai người chấm. Không gọi đây là human evaluation độc lập.
 
-24 bài dưới đây là chỗ ViT5 sai sự kiện hoặc gán nhầm so với thân bài. Bài còn lại không được kể là “đúng hết”. Nhiều bài chỉ bỏ số hoặc mức án trong sapo. Phần sót số đã ghi ở `results/number_diff_verified.md`.
+Danh sách dưới đây ghi nhận ít nhất 25 bài có lỗi nội dung hoặc biến dạng thực thể. Bài 000051 được bổ sung khi đối chiếu lại thân bài và prediction: con trai 3 tuổi bị đổi thành con gái 3 tuổi. Bài còn lại không được kể là “đúng hết”. Nhiều bài chỉ bỏ số hoặc mức án trong sapo. Phần sót số đã ghi ở `results/number_diff_verified.md`.
 
-## 24 bài ViT5 sai hoặc gán nhầm so với thân bài
+## 25 bài ViT5 có lỗi nội dung hoặc biến dạng thực thể
 
 | ID | Thân bài | ViT5 |
 |---|---|---|
-| 000001 | Hồ Xuân Huy, trong bài gọi là Huy | Bùi Quang Huy, tức Vũ nhôm |
+| 000001 | Gold: Hồ Xuân Huy. Thân bài gọi là Huy | Bùi Quang Huy, tức Vũ nhôm |
 | 000003 | Bài điều tra thuốc rao bán, bác sĩ nói quảng cáo phi lý | “chất lượng tốt, khéo léo tận dụng thì sẽ thành công” |
 | 000004 | Luật sư nói quyết định của VEC “vô lý và nực cười” | “vô cùng lý và nực cười” |
 | 000009 | Đang điều tra, bắt 24 người, thu hơn 230 triệu | “phá thành công”, “quy mô lớn nhất trong lịch sử” |
@@ -25,6 +25,7 @@ Cách đọc: xem gold, ViT5, Lead-3 và TextRank của đủ 100 bài. Khi ViT5
 | 000042 | 16 tỷ là vụ khác trong cùng bài | Gán 16 tỷ vào vụ thuê căn hộ, gọi Ngọc Anh là nạn nhân |
 | 000048 | Công an kết luận phòng vệ chính đáng | Trung “chỉ có ý định giết người” |
 | 000049 | Thiếu tá biên phòng hi sinh | “thiếu niên” trúng đạn |
+| 000051 | Thân bài: con trai 3 tuổi bị bỏng trong vụ nổ micro | ViT5 đổi thành con gái 3 tuổi |
 | 000052 | Lê Văn H. đâm anh Lan. Thiếu nữ là bạn gái đến đám tang | “thiếu nữ đâm chết người” |
 | 000060 | Con trai đâm chết mẹ | Thêm người tình bị thương |
 | 000069 | Cửu 20 năm, Hoan 14 năm | Hai bị cáo cùng 14 năm, tên lặp |
@@ -35,13 +36,13 @@ Cách đọc: xem gold, ViT5, Lead-3 và TextRank của đủ 100 bài. Khi ViT5
 | 000090 | Công an tạm giữ Trần Tuấn Đạt | “Nạn nhân bị đâm tử vong đang được công an tạm giữ” |
 | 000091 | “Tin sét đánh” nói về con trai bị giết. Con gái mất tích là chuyện khác | Mẹ mất con gái vì sét đánh |
 
-Riêng 000083, ViT5 lặp “vô vô” đến vỡ câu. Không xếp vào 24 bài trên.
+Riêng 000083, ViT5 lặp “vô vô” đến vỡ câu. Không xếp vào 25 bài trên.
 
 000031 không đưa vào bảng. Thân bài có người mang dao, súng hơi và chai xăng. Gold không kể vũ khí. Lượt đọc 20 bài trước ghi nhầm là bịa dao và súng.
 
 Lead-3 và TextRank lấy câu có sẵn trong thân bài, nên không bịa tên hay đồ vật theo kiểu bảng trên. Hai cách này vẫn lệch sapo khi câu lấy ra chưa phải kết luận của bài. TextRank còn lấy chú thích ảnh hoặc trộn tin, như 000006, 000066, 000076 và 000077.
 
-Phần dưới là 20 bài đã viết chi tiết trước khi đọc đủ 100. Giữ lại làm ví dụ, không cộng thêm vào 24.
+Phần dưới là 20 bài đã viết chi tiết trước khi đọc đủ 100. Giữ lại làm ví dụ, không cộng thêm vào 25.
 
 ---
 
@@ -138,8 +139,8 @@ Phần dưới là 20 bài đã viết chi tiết trước khi đọc đủ 100.
 - Gold: công an Tân Phú điều tra nghi thuốc nổ trong micro, hai mẹ con bị thương.
 - Lead-3: chỉ tạm trú vợ chồng anh N. — **gần như không có vụ nổ**.
 - TextRank: Grab gửi micro, chưa nổ.
-- ViT5: nổ khi sạc, bỏng mẹ và con 3 tuổi — khớp sự việc hơn gold ngắn.
-- Hệ: Lead-3 (cắt ý nặng); TextRank (thiếu hậu quả).
+- ViT5: nêu vụ nổ khi sạc và trẻ 3 tuổi, nhưng sinh “con gái” trong khi thân bài ghi “Con_trai 3 tuổi”. Đây là lỗi đổi giới tính nhân vật.
+- Hệ: ViT5 (đổi giới tính); Lead-3 (cắt ý chính); TextRank (thiếu hậu quả).
 
 ## 000056.txt.seg — Giám đốc khách sạn Công đoàn đầu thú
 
@@ -200,6 +201,6 @@ Phần dưới là 20 bài đã viết chi tiết trước khi đọc đủ 100.
 
 ## Ghi chú sau khi đọc đủ 100
 
-Bảng 24 bài ở đầu file tổng hợp toàn bộ mẫu 100 bài. Các ví dụ chi tiết chỉ minh họa, không dùng để ước lượng tỷ lệ lỗi trên toàn corpus.
+Bảng 25 bài ở đầu file tổng hợp toàn bộ mẫu 100 bài. Các ví dụ chi tiết chỉ minh họa, không dùng để ước lượng tỷ lệ lỗi trên toàn corpus.
 
 Đối chiếu số trên đủ 100 bài vẫn ở `results/number_diff_verified.md`: 7 bài sai hoặc gán nhầm số, 13 bài sót số then chốt của sapo. Không cộng hai cột đó thành một tỷ lệ.

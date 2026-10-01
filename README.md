@@ -28,7 +28,7 @@ python app/demo.py
 ## Phương pháp và đánh giá
 
 - **Lead-n:** lấy n câu đầu thân bài.
-- **TextRank-3:** biểu diễn câu bằng TF-IDF, tính cosine, chạy PageRank 40 vòng với damping 0.85, lấy ba câu điểm cao và giữ thứ tự gốc.
+- **TextRank-3:** biểu diễn câu bằng TF-IDF, tính cosine, chạy PageRank 40 vòng với damping 0.85, lấy ba câu điểm cao và giữ thứ tự gốc. Khi xếp hạng, điểm làm tròn 14 chữ số thập phân; câu bằng điểm được ưu tiên theo thứ tự xuất hiện.
 - **ViT5:** chỉ nhận thân bài, thêm `</s>`, giới hạn input 1.024 token và output `max_length=256`. Notebook inference: [kaggle_abstractive.ipynb](notebooks/kaggle_abstractive.ipynb).
 - **Oracle-3:** dùng gold để tìm tổ hợp ba câu có ROUGE-1 cao nhất, chuyển sang greedy khi số tổ hợp vượt 30.000. Đây là mốc tham chiếu sử dụng đáp án, không phải hệ dùng thực tế hoặc trần cho mọi độ dài tóm tắt.
 
@@ -57,7 +57,7 @@ ROUGE F1 trung bình trên **500 bài đầu** theo tên file, `000001`–`00050
 
 Trên **100 bài đầu**, Lead-3 đạt 0.2507 / 0.1296 / 0.1841, TextRank đạt 0.2428 / 0.1100 / 0.1730, ViT5 đạt 0.2664 / 0.1341 / 0.2084. Đây là tập con của mẫu 500 bài.
 
-Rà soát định tính một lượt trên 100 bài ghi nhận **24 bài ViT5 sai hoặc gán nhầm sự kiện**. Đối chiếu số ghi nhận **7 bài sai/gán nhầm số** và **13 bài sót số then chốt trong gold**. Các nhóm lỗi có thể giao nhau. Chưa có hai người chấm độc lập, và không thể suy tỷ lệ lỗi cho toàn bộ Vietnews. Xem [phân tích lỗi](results/error_analysis.md) và [đối chiếu số](results/number_diff_verified.md).
+Rà soát định tính một lượt trên 100 bài ghi nhận **ít nhất 25 bài ViT5 có lỗi nội dung hoặc biến dạng thực thể**. Đối chiếu số ghi nhận **7 bài sai/gán nhầm số** và **13 bài sót số then chốt trong gold**. Các nhóm lỗi có thể giao nhau. Chưa có hai người chấm độc lập, và không thể suy tỷ lệ lỗi cho toàn bộ Vietnews. Xem [phân tích lỗi](results/error_analysis.md) và [đối chiếu số](results/number_diff_verified.md).
 
 Thí nghiệm thay `_` bằng khoảng trắng trước khi đưa vào ViT5 tăng ROUGE-1 từ **0.2784 lên 0.3124** trên cùng 500 bài, giảm số bài bị cắt input từ **120 xuống 38**. Đây là phân tích khám phá trên test; chưa chứng minh factuality tốt hơn và chưa áp dụng vào pipeline chính. Xem [thiết kế và kết quả A/B](docs/VIT5_INPUT_AB.md).
 
@@ -73,14 +73,15 @@ experiments/   thí nghiệm A/B đầu vào ViT5
 results/       prediction, điểm số và phân tích lỗi
 data/          nguồn dữ liệu; corpus tải về không đưa vào Git
 docs/          mô tả thí nghiệm và ảnh demo
-report/        báo cáo Word và PDF
+report/        báo cáo Word
 slides/        slide PowerPoint
 ```
 
 ## Báo cáo và slide
 
+Bản Word là nguồn chính của báo cáo. PDF sẽ được xuất từ bản Word đã chốt.
+
 - [Báo cáo Word](report/CS221-Vietnews-bao-cao.docx)
-- [Báo cáo PDF](report/CS221-Vietnews-bao-cao.pdf)
 - [Slide PowerPoint](slides/CS221-Vietnews-bao-ve.pptx)
 
 ## Tài liệu tham khảo
