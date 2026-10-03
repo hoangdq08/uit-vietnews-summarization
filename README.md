@@ -73,8 +73,7 @@ experiments/   thí nghiệm A/B đầu vào ViT5
 results/       prediction, điểm số và phân tích lỗi
 data/          nguồn dữ liệu; corpus tải về không đưa vào Git
 docs/          mô tả thí nghiệm và ảnh demo
-report/        báo cáo Word
-slides/        slide PowerPoint
+report/        báo cáo Word và slide PowerPoint
 ```
 
 ## Báo cáo và slide
@@ -82,7 +81,7 @@ slides/        slide PowerPoint
 Bản Word là nguồn chính của báo cáo. PDF sẽ được xuất từ bản Word đã chốt.
 
 - [Báo cáo Word](report/CS221-Vietnews-bao-cao.docx)
-- [Slide PowerPoint](slides/CS221-Vietnews-bao-ve.pptx)
+- [Slide PowerPoint](report/CS221-Vietnews-bao-ve.pptx)
 
 ## Tài liệu tham khảo
 
