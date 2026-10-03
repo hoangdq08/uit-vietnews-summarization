@@ -78,8 +78,6 @@ report/        báo cáo Word và slide PowerPoint
 
 ## Báo cáo và slide
 
-Bản Word là nguồn chính của báo cáo. PDF sẽ được xuất từ bản Word đã chốt.
-
 - [Báo cáo Word](report/CS221-Vietnews-bao-cao.docx)
 - [Slide PowerPoint](report/CS221-Vietnews-bao-ve.pptx)
 
